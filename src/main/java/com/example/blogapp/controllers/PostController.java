@@ -1,8 +1,10 @@
 package com.example.blogapp.controllers;
 
+import com.example.blogapp.config.Constants;
 import com.example.blogapp.entities.Post;
 import com.example.blogapp.payloads.ApiResponse;
 import com.example.blogapp.payloads.PostDto;
+import com.example.blogapp.payloads.PostResponse;
 import com.example.blogapp.repositories.PostRepo;
 import com.example.blogapp.services.PostService;
 import org.springframework.http.HttpStatus;
@@ -15,7 +17,7 @@ import java.util.List;
 @RequestMapping("/api/")
 public class PostController {
 
-    private PostService postService;
+    private final PostService postService;
 
     public PostController(PostService postService) {
         this.postService = postService;
@@ -41,6 +43,12 @@ public class PostController {
         return new ResponseEntity<>(postsByCategory, HttpStatus.OK);
     }
 
+    @PutMapping("/posts/{postId}")
+    public ResponseEntity<PostDto> updatePostById(@RequestBody PostDto postDto, @PathVariable("postId") Integer id) {
+        PostDto post = this.postService.updatePost(postDto, id);
+        return new ResponseEntity<>(post, HttpStatus.OK);
+    }
+
     @GetMapping("/posts")
     public ResponseEntity<List<PostDto>> getPosts() {
         List<PostDto> posts = this.postService.getAllPost();
@@ -53,9 +61,26 @@ public class PostController {
         return new ResponseEntity<>(post, HttpStatus.OK);
     }
 
+    @GetMapping("/posts/search/{keywords}")
+    public ResponseEntity<List<PostDto>> searchPostByKeywords(@PathVariable("keywords") String keywords) {
+        List<PostDto> posts = this.postService.searchPosts(keywords);
+        return new ResponseEntity<>(posts, HttpStatus.OK);
+    }
+
     @DeleteMapping("/posts/{postId}")
     public ResponseEntity<ApiResponse> deletePostById(@PathVariable("postId") Integer id) {
         this.postService.deletePost(id);
         return new ResponseEntity<>(new ApiResponse("Post deleted successfully", true), HttpStatus.OK);
+    }
+
+    @GetMapping("/posts/paginated")
+    public ResponseEntity<PostResponse> getPostByPage(
+            @RequestParam(value = "page", defaultValue = Constants.DEFAULT_PAGE, required = false) Integer pageNo,
+            @RequestParam(value = "size", defaultValue = Constants.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = Constants.SORT_BY, required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = Constants.SORT_DIR, required = false) String sortDir) {
+
+        PostResponse postByPage = this.postService.getPostByPage(pageNo, pageSize, sortBy, sortDir);
+        return new ResponseEntity<>(postByPage, HttpStatus.OK);
     }
 }
