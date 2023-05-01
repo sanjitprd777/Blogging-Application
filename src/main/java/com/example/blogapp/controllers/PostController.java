@@ -41,6 +41,12 @@ public class PostController {
         return new ResponseEntity<>(postsByCategory, HttpStatus.OK);
     }
 
+    @PutMapping("/posts/{postId}")
+    public ResponseEntity<PostDto> updatePostById(@RequestBody PostDto postDto, @PathVariable("postId") Integer id) {
+        PostDto post = this.postService.updatePost(postDto, id);
+        return new ResponseEntity<>(post, HttpStatus.OK);
+    }
+
     @GetMapping("/posts")
     public ResponseEntity<List<PostDto>> getPosts() {
         List<PostDto> posts = this.postService.getAllPost();
@@ -51,6 +57,12 @@ public class PostController {
     public ResponseEntity<PostDto> getPostById(@PathVariable("postId") Integer id) {
         PostDto post = this.postService.getPostById(id);
         return new ResponseEntity<>(post, HttpStatus.OK);
+    }
+
+    @GetMapping("/posts/search/{keyword}")
+    public ResponseEntity<List<PostDto>> searchPostByKeyword(@PathVariable("keyword") String keyword) {
+        List<PostDto> posts = this.postService.searchPosts(keyword);
+        return new ResponseEntity<>(posts, HttpStatus.OK);
     }
 
     @DeleteMapping("/posts/{postId}")

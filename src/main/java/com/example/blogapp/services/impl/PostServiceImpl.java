@@ -4,7 +4,6 @@ import com.example.blogapp.entities.Category;
 import com.example.blogapp.entities.Post;
 import com.example.blogapp.entities.User;
 import com.example.blogapp.exceptions.ResourceNotFoundException;
-import com.example.blogapp.payloads.CategoryDto;
 import com.example.blogapp.payloads.PostDto;
 import com.example.blogapp.repositories.CategoryRepo;
 import com.example.blogapp.repositories.PostRepo;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,9 +57,10 @@ public class PostServiceImpl implements PostService {
         post.setContent(postDto.getContent());
         post.setTitle(postDto.getTitle());
         post.setImageName(postDto.getImageName());
-        post.setAddedDate(postDto.getAddedDate());
+        post.setAddedDate(new Date());
 
-        return postDto;
+        Post updatedPost = this.postRepo.save(post);
+        return this.mapper.map(updatedPost, PostDto.class);
     }
 
     @Override
@@ -102,6 +101,11 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostDto> searchPosts(String keyword) {
-        return null;
+        List<Post> posts = this.postRepo.findAll();
+
+        return posts.stream()
+                .filter(post -> post.getContent().contains(keyword))
+                .map(post -> this.mapper.map(post, PostDto.class))
+                .collect(Collectors.toList());
     }
 }
