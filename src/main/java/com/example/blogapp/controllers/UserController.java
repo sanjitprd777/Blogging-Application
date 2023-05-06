@@ -6,6 +6,7 @@ import com.example.blogapp.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,17 +38,19 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-
     @PostMapping("/")
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
         UserDto user = this.userService.createUser(userDto);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
+    // Allow for 'ROLE_ADMIN' use only.
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@Valid @PathVariable Integer userId) {
+        System.out.println("Inside delete user");
         this.userService.deleteUser(userId);
         return new ResponseEntity<>(new ApiResponse("User deleted successfully", true), HttpStatus.OK);
     }
-
 }
+

@@ -16,7 +16,7 @@ public class UserDto {
     @Size(min = 3, message = "Username must be min of 3 and max of 30 characters")
     private String name;
 
-    @Email(message = "Email address is not valid!!")
+    @Email(message = "Email address is not valid!")
     private String email;
 
     @NotEmpty
@@ -26,6 +26,6 @@ public class UserDto {
     private String password;
 
     @NotEmpty
-    @Size(max = 100, message = "About can not exceed 100 characters")
+    @Size(max = 100, message = "Content can not exceed 100 characters")
     private String about;
 }

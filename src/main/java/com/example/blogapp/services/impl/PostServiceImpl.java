@@ -1,6 +1,7 @@
 package com.example.blogapp.services.impl;
 
 import com.example.blogapp.entities.Category;
+import com.example.blogapp.entities.Comment;
 import com.example.blogapp.entities.Post;
 import com.example.blogapp.entities.User;
 import com.example.blogapp.exceptions.ResourceNotFoundException;
@@ -24,11 +25,10 @@ import java.util.stream.Collectors;
 @Service
 public class PostServiceImpl implements PostService {
 
-    private PostRepo postRepo;
-    private UserRepo userRepo;
-    private CategoryRepo categoryRepo;
-    private ModelMapper mapper;
-
+    private final PostRepo postRepo;
+    private final UserRepo userRepo;
+    private final CategoryRepo categoryRepo;
+    private final ModelMapper mapper;
 
     public PostServiceImpl(PostRepo postRepo, ModelMapper mapper,
                            UserRepo userRepo, CategoryRepo categoryRepo) {
@@ -94,7 +94,8 @@ public class PostServiceImpl implements PostService {
         Page<Post> postPage = this.postRepo.findAll(pageable);
         List<Post> allPosts = postPage.getContent();
 
-        List<PostDto> allPostDtos = allPosts.stream().map(post -> this.mapper.map(post, PostDto.class)).collect(Collectors.toList());
+        List<PostDto> allPostDtos = allPosts.stream().map(
+                post -> this.mapper.map(post, PostDto.class)).collect(Collectors.toList());
 
         PostResponse postResponse = new PostResponse();
         postResponse.setContent(allPostDtos);
@@ -129,5 +130,12 @@ public class PostServiceImpl implements PostService {
     public List<PostDto> searchPosts(String keyword) {
         List<Post> posts = this.postRepo.findByContentContaining(keyword);
         return posts.stream().map(post -> this.mapper.map(post, PostDto.class)).collect(Collectors.toList());
+    }
+
+    @Override
+    public void addCommentToPost(Comment comment, Post post) {
+        // Whenever a comment is made, it will be added to post.
+        post.getComments().add(comment);
+        this.postRepo.save(post);
     }
 }
