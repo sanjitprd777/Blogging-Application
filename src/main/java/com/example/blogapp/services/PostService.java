@@ -1,5 +1,6 @@
 package com.example.blogapp.services;
 
+import com.example.blogapp.entities.Comment;
 import com.example.blogapp.entities.Post;
 import com.example.blogapp.payloads.PostDto;
 import com.example.blogapp.payloads.PostResponse;
@@ -26,4 +27,5 @@ public interface PostService {
 
     List<PostDto> searchPosts(String keyword);
 
+    void addCommentToPost(Comment comment, Post post);
 }

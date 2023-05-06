@@ -7,20 +7,24 @@ import com.example.blogapp.payloads.CommentDto;
 import com.example.blogapp.repositories.CommentRepo;
 import com.example.blogapp.repositories.PostRepo;
 import com.example.blogapp.services.CommentService;
+import com.example.blogapp.services.PostService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CommentServiceImpl implements CommentService {
 
-    private CommentRepo commentRepo;
-    private PostRepo postRepo;
-    private ModelMapper modelMapper;
+    private final CommentRepo commentRepo;
+    private final PostRepo postRepo;
+    private final ModelMapper modelMapper;
+    private final PostService postService;
 
-    public CommentServiceImpl(CommentRepo commentRepo, PostRepo postRepo, ModelMapper modelMapper) {
+    public CommentServiceImpl(CommentRepo commentRepo, PostRepo postRepo, ModelMapper modelMapper,
+                              PostService postService) {
         this.commentRepo = commentRepo;
         this.postRepo = postRepo;
         this.modelMapper = modelMapper;
+        this.postService = postService;
     }
 
     @Override
@@ -33,6 +37,10 @@ public class CommentServiceImpl implements CommentService {
         comment.setUser(post.getUser());
 
         Comment savedComment = this.commentRepo.save(comment);
+
+        // Save the comment to post
+        this.postService.addCommentToPost(savedComment, post);
+
         return this.modelMapper.map(savedComment, CommentDto.class);
     }
 

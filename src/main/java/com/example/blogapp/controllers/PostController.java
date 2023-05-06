@@ -25,7 +25,7 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
-    private FileService fileService;
+    private final FileService fileService;
 
     @Value("${project.image}")
     private String path;
@@ -100,12 +100,13 @@ public class PostController {
     // Post image upload
     @PostMapping("/post/image/upload/{postId}")
     public ResponseEntity<PostDto> uploadPostImage(
-            @RequestParam("image")MultipartFile multipartFile,
+            @RequestParam("image") MultipartFile multipartFile,
             @PathVariable("postId") Integer id) throws IOException {
 
         PostDto postById = this.postService.getPostById(id);
         String fileName = this.fileService.uploadImage(path, multipartFile);
         postById.setImageName(fileName);
+
         PostDto postDto = this.postService.updatePost(postById, id);
         return new ResponseEntity<>(postDto, HttpStatus.OK);
     }
