@@ -1,9 +1,13 @@
 package com.example.blogapp.payloads;
 
+import com.example.blogapp.entities.Role;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @NoArgsConstructor
 @Getter
@@ -28,4 +32,6 @@ public class UserDto {
     @NotEmpty
     @Size(max = 100, message = "Content can not exceed 100 characters")
     private String about;
+
+    private Set<RoleDto> roles = new HashSet<>();
 }

@@ -1,11 +1,15 @@
 package com.example.blogapp.services.impl;
 
+import com.example.blogapp.config.Constants;
+import com.example.blogapp.entities.Role;
 import com.example.blogapp.entities.User;
 import com.example.blogapp.exceptions.ResourceNotFoundException;
 import com.example.blogapp.payloads.UserDto;
+import com.example.blogapp.repositories.RoleRepo;
 import com.example.blogapp.repositories.UserRepo;
 import com.example.blogapp.services.UserService;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,11 +20,17 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepo userRepo;
     private final ModelMapper modelMapper;
+    private PasswordEncoder passwordEncoder;
+    private RoleRepo roleRepo;
 
     public UserServiceImpl(UserRepo userRepo,
-                           ModelMapper mapper) {
+                           ModelMapper mapper,
+                           PasswordEncoder passwordEncoder,
+                           RoleRepo roleRepo) {
         this.userRepo = userRepo;
         this.modelMapper = mapper;
+        this.passwordEncoder = passwordEncoder;
+        this.roleRepo = roleRepo;
     }
 
     @Override
@@ -61,6 +71,23 @@ public class UserServiceImpl implements UserService {
         User user = this.userRepo.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         this.userRepo.delete(user);
+    }
+
+    @Override
+    public UserDto registerNewUser(UserDto userDto) {
+        User user = this.modelMapper.map(userDto, User.class);
+
+        // Encoded the password
+        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
+
+        // Assign roles
+        Role role = this.roleRepo.findById(Constants.NORMAL_USER).get();
+
+        user.getRoles().add(role);
+
+        User save = this.userRepo.save(user);
+
+        return this.modelMapper.map(save, UserDto.class);
     }
 
     private User userDtoToUser(UserDto userDto) {
