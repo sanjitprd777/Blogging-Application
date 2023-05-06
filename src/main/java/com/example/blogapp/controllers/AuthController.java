@@ -3,12 +3,15 @@ package com.example.blogapp.controllers;
 import com.example.blogapp.exceptions.ApiException;
 import com.example.blogapp.payloads.JwtAuthRequest;
 import com.example.blogapp.payloads.JwtAuthResponse;
+import com.example.blogapp.payloads.UserDto;
 import com.example.blogapp.security.JwtTokenHelper;
+import com.example.blogapp.services.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,13 +26,16 @@ public class AuthController {
     private final JwtTokenHelper jwtTokenHelper;
     private final UserDetailsService userDetailsService;
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
 
     public AuthController(JwtTokenHelper jwtTokenHelper,
                           UserDetailsService userDetailsService,
-                          AuthenticationManager authenticationManager) {
+                          AuthenticationManager authenticationManager,
+                          UserService userService) {
         this.jwtTokenHelper = jwtTokenHelper;
         this.userDetailsService = userDetailsService;
         this.authenticationManager = authenticationManager;
+        this.userService = userService;
     }
 
     @PostMapping("login")
@@ -52,5 +58,12 @@ public class AuthController {
             System.out.println("Invalid user details!");
             throw new ApiException("Invalid user credentials");
         }
+    }
+
+    // Register new user API
+    @PostMapping("/register")
+    public ResponseEntity<UserDto> registerNewUser(@RequestBody UserDto userDto) {
+        UserDto registeredUser = this.userService.registerNewUser(userDto);
+        return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
     }
 }

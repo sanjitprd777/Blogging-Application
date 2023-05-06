@@ -1,5 +1,8 @@
 package com.example.blogapp;
 
+import com.example.blogapp.config.Constants;
+import com.example.blogapp.entities.Role;
+import com.example.blogapp.repositories.RoleRepo;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -8,11 +11,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+
 @SpringBootApplication
 public class BlogAppApplication implements CommandLineRunner {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private RoleRepo roleRepo;
 
     public static void main(String[] args) {
         SpringApplication.run(BlogAppApplication.class, args);
@@ -26,6 +33,25 @@ public class BlogAppApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-//        System.out.println(passwordEncoder.encode("123abc"));
+        System.out.println(passwordEncoder.encode("123abc"));
+        try {
+            Role role = new Role();
+            role.setId(Constants.ADMIN_USER);
+            role.setName("ADMIN_USER");
+
+
+            Role role2 = new Role();
+            role2.setId(Constants.NORMAL_USER);
+            role2.setName("NORMAL_USER");
+
+            List<Role> roleList = List.of(role, role2);
+
+            List<Role> roles = roleRepo.saveAll(roleList);
+
+            roles.forEach(r -> System.out.println(r + r.getName()));
+
+        } catch (Exception ex) {
+
+        }
     }
 }
