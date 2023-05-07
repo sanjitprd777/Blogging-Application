@@ -7,21 +7,36 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableWebMvc
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    public static final String[] PUBLIC_URLS = {
+            "/v3/api-docs",
+            "/v2/api-docs",
+            "/api/v1/auth/**",
+            "/swagger-resources/**",
+            "/swagger-ui/**",
+            "/webjars/**"
+    };
 
     private final CustomUserDetailService customUserDetailService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -39,67 +54,51 @@ public class SecurityConfig {
      * JavaScript based authentication.
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
+    public SecurityFilterChain supplyFilterChain(HttpSecurity http) throws Exception {
         // Method chaining
         http
                 .csrf().disable()
-                .authorizeHttpRequests()
-                .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET).permitAll() // This allows Get api to access without login
-                .anyRequest()
-                .authenticated()
-                .and()
-                .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers(HttpMethod.GET).permitAll() // This allows to Get api to access without login
+                        .requestMatchers(PUBLIC_URLS).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling()
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
+        http.authenticationProvider(daoAuthenticationProvider());
         return http.build();
-        /**
-         * @Bean
-         * public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-         *     http.csrf()
-         *       .disable()
-         *       .authorizeRequests()
-         *       .antMatchers(HttpMethod.DELETE)
-         *       .hasRole("ADMIN")
-         *       .antMatchers("/admin/**")
-         *       .hasAnyRole("ADMIN")
-         *       .antMatchers("/user/**")
-         *       .hasAnyRole("USER", "ADMIN")
-         *       .antMatchers("/login/**")
-         *       .anonymous()
-         *       .anyRequest()
-         *       .authenticated()
-         *       .and()
-         *       .httpBasic()
-         *       .and()
-         *       .sessionManagement()
-         *       .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-         *
-         *     return http.build();
-         * }
-         */
     }
 
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return (web) -> web.ignoring().requestMatchers("/v2/api-docs", "/configuration/ui", "/configuration/**", "/swagger-ui.html", "/webjars/**", "/swagger-resources/**", "/swagger-ui/**");
+//
+//    }
+
     /**
-     * When user pass the basic auth (username, password), this bean will do the validations on credentials.
+     * When a user passes the basic auth (username, password), this bean will do the validations on credentials.
      */
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(this.customUserDetailService)
-                .passwordEncoder(passwordEncoder())
-                .and()
-                .build();
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(customUserDetailService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManagerBean(
+            AuthenticationConfiguration authenticationConfiguration) throws Exception {
+
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }
